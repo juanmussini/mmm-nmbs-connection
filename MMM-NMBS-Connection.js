@@ -118,7 +118,7 @@ Module.register("MMM-NMBS-Connection", {
 				let departureInfo = document.createElement("div");
 				departureInfo.className = `stib-times ${i > 0 ? "dimmed" : ""}`.trim();
 				departureInfo.style.gridRow = "1 / span 1";
-				departureInfo.innerHTML = `<span>${minutesUntilDeparture}m p${platformValue} ${durationMinutes}m${changesDisplay}</span>`;
+				departureInfo.innerHTML = `<span>${minutesUntilDeparture}m p${platformValue} ${durationMinutes}⏱️${changesDisplay}</span>`;
 				table.appendChild(departureInfo);
 			}
 		}
