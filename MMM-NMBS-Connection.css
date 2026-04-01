@@ -15,3 +15,11 @@
   margin-bottom: 10px;
   margin-top: -10px;
 }
+
+.MMM-NMBS-Connection.stib-table {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto auto;
+  column-gap: 10px;
+  row-gap: 2px;
+  align-items: center;
+}
