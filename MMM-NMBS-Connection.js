@@ -48,11 +48,8 @@ Module.register("MMM-NMBS-Connection", {
 		const self = this;
 		const url = `${self.config.url}/?to=${self.config.to}&from=${self.config.from}&timeSel=depart&format=json&lang=${self.config.language}`;
 
-		fetch(url, {
-			headers: {
-				"User-Agent": "Mozilla/5.0 (Node.js) MagicMirror (https://github.com/MichMich/MagicMirror/)"
-			}
-		})
+		//fetch(url, {headers: {"User-Agent": "Mozilla/5.0 (Node.js) MagicMirror (https://github.com/MichMich/MagicMirror/)"}})
+		fetch(url, {})
 			.then(function (response) {
 				return response.json();
 			})
@@ -74,26 +71,26 @@ Module.register("MMM-NMBS-Connection", {
 
 		const now = moment();
 		const resultCount = Math.min(this.config.results, connections.length);
-		if (resultCount > 0) {
-			const firstConnection = connections[0];
-			const destination = firstConnection.arrival && firstConnection.arrival.station ? firstConnection.arrival.station : "";
-			const firstDepartureMoment = moment.unix(firstConnection.departure.time);
-			const firstMinutesUntilDeparture = Math.max(0, firstDepartureMoment.diff(now, "minutes"));
-
-			table.style.gridTemplateColumns = `auto auto 1fr repeat(${resultCount}, auto)`;
+		for (let i = 0; i < resultCount; i++) {
+			let connection = connections[i];
+			const rowIndex = i + 1;
+			const departureMoment = moment.unix(connection.departure.time);
+			const minutesUntilDeparture = Math.max(0, departureMoment.diff(now, "minutes"));
+			const durationMinutes = Math.max(0, Math.round(connection.duration / 60));
+			const destination = connection.arrival && connection.arrival.station ? connection.arrival.station : "";
 
 			let mode = document.createElement("span");
 			mode.className = "stib-stopname dimmed";
-			mode.style.gridRow = "1 / span 1";
+			mode.style.gridRow = `${rowIndex} / span 1`;
 			mode.innerHTML = "Train";
 			table.appendChild(mode);
 
 			let lineContainer = document.createElement("div");
 			lineContainer.className = "stib-linenumber-container";
-			lineContainer.style.gridRow = "1 / span 1";
+			lineContainer.style.gridRow = `${rowIndex} / span 1`;
 			let lineNumber = document.createElement("span");
 			lineNumber.className = "stib-linenumber";
-			lineNumber.innerHTML = firstMinutesUntilDeparture;
+			lineNumber.innerHTML = minutesUntilDeparture;
 			lineContainer.appendChild(lineNumber);
 			let lineIcon = document.createElement("span");
 			lineIcon.className = "stib-linenumber-icon";
@@ -102,23 +99,21 @@ Module.register("MMM-NMBS-Connection", {
 
 			let routeName = document.createElement("span");
 			routeName.className = "stib-routename";
-			routeName.style.gridRow = "1 / span 1";
+			routeName.style.gridRow = `${rowIndex} / span 1`;
 			routeName.innerHTML = destination;
 			table.appendChild(routeName);
 
-			for (let i = 0; i < resultCount; i++) {
-				let connection = connections[i];
-				const departureMoment = moment.unix(connection.departure.time);
-				const minutesUntilDeparture = Math.max(0, departureMoment.diff(now, "minutes"));
-				const durationMinutes = Math.max(0, Math.round(connection.duration / 60));
-				const platformValue = connection.departure.platform || "?";
+			let platform = document.createElement("div");
+			platform.className = "stib-times";
+			platform.style.gridRow = `${rowIndex} / span 1`;
+			platform.innerHTML = `<span>p${connection.departure.platform}</span>`;
+			table.appendChild(platform);
 
-				let departureInfo = document.createElement("div");
-				departureInfo.className = `stib-times ${i > 0 ? "dimmed" : ""}`.trim();
-				departureInfo.style.gridRow = "1 / span 1";
-				departureInfo.innerHTML = `<span>${minutesUntilDeparture}m p${platformValue} ${durationMinutes}m</span>`;
-				table.appendChild(departureInfo);
-			}
+			let duration = document.createElement("div");
+			duration.className = "stib-times dimmed";
+			duration.style.gridRow = `${rowIndex} / span 1`;
+			duration.innerHTML = `<span>${durationMinutes}m</span>`;
+			table.appendChild(duration);
 		}
 
 		this.forecast = table;
