@@ -47,6 +47,7 @@ Module.register("MMM-NMBS-Connection", {
 	updateTemp: function () {
 		const self = this;
 		const url = `${self.config.url}/?to=${self.config.to}&from=${self.config.from}&timeSel=depart&format=json&lang=${self.config.language}`;
+		self.scheduleUpdate(self.config.updateInterval);
 
 		//fetch(url, {headers: {"User-Agent": "Mozilla/5.0 (Node.js) MagicMirror (https://github.com/MichMich/MagicMirror/)"}})
 		fetch(url, {})
@@ -54,13 +55,10 @@ Module.register("MMM-NMBS-Connection", {
 				return response.json();
 			})
 			.then(function (json) {
-				self.scheduleUpdate((self.loaded) ? -1 : self.config.updateInterval);
-
 				return self.processConnections(json);
 			})
 			.catch(error => {
 				Log.error("Fetch Error =\n", error);
-				self.scheduleUpdate(self.config.updateInterval);
 			});
 	},
 	processConnections: function (data) {
@@ -77,8 +75,6 @@ Module.register("MMM-NMBS-Connection", {
 		if (resultCount > 0) {
 			const firstConnection = connections[0];
 			const destination = firstConnection.arrival && firstConnection.arrival.station ? firstConnection.arrival.station : "";
-			const firstDepartureMoment = moment.unix(firstConnection.departure.time);
-			const firstMinutesUntilDeparture = Math.max(0, firstDepartureMoment.diff(now, "minutes"));
 
 			table.style.gridTemplateColumns = `auto auto 1fr repeat(${resultCount}, auto)`;
 
@@ -93,7 +89,10 @@ Module.register("MMM-NMBS-Connection", {
 			lineContainer.style.gridRow = "1 / span 1";
 			let lineNumber = document.createElement("span");
 			lineNumber.className = "stib-linenumber";
-			lineNumber.innerHTML = firstMinutesUntilDeparture;
+			const firstTrainNumber = ((firstConnection.departure || {}).vehicleinfo || {}).shortname
+				|| ((firstConnection.departure || {}).vehicle || "").split(".").pop()
+				|| "?";
+			lineNumber.innerHTML = firstTrainNumber;
 			lineContainer.appendChild(lineNumber);
 			let lineIcon = document.createElement("span");
 			lineIcon.className = "stib-linenumber-icon";
@@ -108,9 +107,12 @@ Module.register("MMM-NMBS-Connection", {
 
 			for (let i = 0; i < resultCount; i++) {
 				let connection = connections[i];
-				const departureMoment = moment.unix(connection.departure.time);
+				const departureDelaySeconds = Number(connection.departure && connection.departure.delay) || 0;
+				const arrivalDelaySeconds = Number(connection.arrival && connection.arrival.delay) || 0;
+				const departureMoment = moment.unix((Number(connection.departure.time) || 0) + departureDelaySeconds);
 				const minutesUntilDeparture = Math.max(0, departureMoment.diff(now, "minutes"));
-				const durationMinutes = Math.max(0, Math.round(connection.duration / 60));
+				const arrivalMoment = moment.unix((Number(connection.arrival.time) || 0) + arrivalDelaySeconds);
+				const durationMinutes = Math.max(0, arrivalMoment.diff(departureMoment, "minutes"));
 				const platformValue = connection.departure.platform || "?";
 				const changes = connection.vias && connection.vias.number ? parseInt(connection.vias.number, 10) : 0;
 				const changesDisplay = Number.isFinite(changes) && changes > 0 ? ` ${changes}🚉` : " 0🚉";
