@@ -58,7 +58,10 @@ Module.register("MMM-NMBS-Connection", {
 
 				return self.processConnections(json);
 			})
-			.catch(error => Log.error("Fetch Error =\n", error));
+			.catch(error => {
+				Log.error("Fetch Error =\n", error);
+				self.scheduleUpdate(self.config.updateInterval);
+			});
 	},
 	processConnections: function (data) {
 		let table = document.createElement("div");
