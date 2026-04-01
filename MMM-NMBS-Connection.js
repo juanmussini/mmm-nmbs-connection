@@ -48,11 +48,8 @@ Module.register("MMM-NMBS-Connection", {
 		const self = this;
 		const url = `${self.config.url}/?to=${self.config.to}&from=${self.config.from}&timeSel=depart&format=json&lang=${self.config.language}`;
 
-		fetch(url, {
-			headers: {
-				"User-Agent": "Mozilla/5.0 (Node.js) MagicMirror (https://github.com/MichMich/MagicMirror/)"
-			}
-		})
+		//fetch(url, {headers: {"User-Agent": "Mozilla/5.0 (Node.js) MagicMirror (https://github.com/MichMich/MagicMirror/)"}})
+		fetch(url, {})
 			.then(function (response) {
 				return response.json();
 			})
