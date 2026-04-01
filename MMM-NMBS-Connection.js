@@ -30,7 +30,13 @@ Module.register("MMM-NMBS-Connection", {
 
 		this.loaded = false;
 		this.forecast = this.config.text;
+		this.latestData = null;
 		this.updateTimer = null;
+		this.domRefreshTimer = setInterval(() => {
+			if (this.latestData) {
+				this.processConnections(this.latestData);
+			}
+		}, 60 * 1000);
 		this.scheduleUpdate(this.config.initialLoadDelay);
 	},
 	getDom: function () {
@@ -62,6 +68,8 @@ Module.register("MMM-NMBS-Connection", {
 			});
 	},
 	processConnections: function (data) {
+		this.latestData = data;
+
 		let table = document.createElement("div");
 		table.className = "stib-table small MMM-NMBS-Connection";
 		let connections = data.connection || [];
